@@ -1,17 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
-
+import { useEffect, useRef, useState } from "react";
 import styles from "./Hero.module.css";
 
-interface HeroProps {
-  onExpand: () => void;
-  isExpanded: boolean;
-}
-
-export default function Hero({ onExpand, isExpanded }: HeroProps) {
+export default function Hero() {
   const heroRef = useRef<HTMLElement>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 300);
@@ -30,27 +25,31 @@ export default function Hero({ onExpand, isExpanded }: HeroProps) {
         }
       }
     };
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      if (heroRef.current) {
+        const { clientX, clientY } = e;
+        const { innerWidth, innerHeight } = window;
+        
+        // Calculate normalized mouse position (-1 to 1)
+        const x = (clientX / innerWidth) * 2 - 1;
+        const y = (clientY / innerHeight) * 2 - 1;
+        
+        setMousePos({ x, y });
+      }
+    };
+
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
   }, []);
 
-  const handleExpand = useCallback(() => {
-    onExpand();
-    // Small delay then scroll to content
-    setTimeout(() => {
-      const aboutSection = document.getElementById("about");
-      if (aboutSection) {
-        aboutSection.scrollIntoView({ behavior: "smooth" });
-      }
-    }, 100);
-  }, [onExpand]);
-
   return (
-    <section
-      className={`${styles.hero} ${isExpanded ? styles.expanded : ""}`}
-      ref={heroRef}
-      id="hero"
-    >
+    <section className={styles.hero} ref={heroRef} id="hero">
       {/* Background Video */}
       <div className={styles.heroImageWrapper}>
         <video
@@ -70,18 +69,24 @@ export default function Hero({ onExpand, isExpanded }: HeroProps) {
 
       {/* Hero Content */}
       <div className={styles.heroContent}>
-        {/* Giant Title */}
+        {/* Giant Interactive Title */}
         <div
           className={`${styles.heroTitleWrapper} ${
             isVisible ? styles.revealed : ""
           }`}
         >
-          <h1 className={styles.heroTitle}>
+          <h1 
+            className={styles.heroTitle}
+            style={{
+              transform: `translate(${mousePos.x * -20}px, ${mousePos.y * -20}px) rotateY(${mousePos.x * 10}deg) rotateX(${mousePos.y * -10}deg)`,
+              transition: "transform 0.1s ease-out"
+            }}
+          >
             <span className={styles.titleLine}>
               <span className={styles.titleWord} style={{ animationDelay: "0.5s" }}>SDL</span>
             </span>
             <span className={styles.titleLine}>
-              <span className={styles.titleWord} style={{ animationDelay: "0.7s" }}>CARGO</span>
+              <span className={styles.titleWord} style={{ animationDelay: "0.7s", color: "var(--color-accent)" }}>CARGO</span>
             </span>
           </h1>
         </div>
@@ -90,34 +95,7 @@ export default function Hero({ onExpand, isExpanded }: HeroProps) {
         <div
           className={`${styles.heroBottom} ${isVisible ? styles.revealed : ""}`}
         >
-          {/* Expand Button */}
-          <button
-            className={`${styles.expandButton} ${isExpanded ? styles.expandedBtn : ""}`}
-            onClick={handleExpand}
-            aria-label="Expand to explore"
-            id="expand-btn"
-          >
-            <div className={styles.expandCircle}>
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 22 22"
-                fill="none"
-                className={styles.expandArrow}
-              >
-                <path
-                  d="M11 4V18M11 18L5 12M11 18L17 12"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-            <span className={styles.expandLabel}>
-              {isExpanded ? "SCROLLING" : "EXPLORE"}
-            </span>
-          </button>
+          <div className={styles.heroSpacer}></div>
 
           {/* Tagline */}
           <div className={styles.heroTagline}>
@@ -136,8 +114,9 @@ export default function Hero({ onExpand, isExpanded }: HeroProps) {
       </div>
 
       {/* Bottom scroll hint */}
-      <div className={`${styles.scrollHint} ${isVisible && !isExpanded ? styles.visible : ""}`}>
+      <div className={`${styles.scrollHint} ${isVisible ? styles.visible : ""}`}>
         <div className={styles.scrollLine}></div>
+        <span className={styles.scrollText}>SCROLL</span>
       </div>
     </section>
   );
