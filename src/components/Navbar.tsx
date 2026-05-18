@@ -33,16 +33,7 @@ export default function Navbar() {
         id="navbar"
       >
         <div className={styles.navContent}>
-          <a href="#" className={styles.logo} onClick={closeMobileMenu}>
-            <Image
-              src="/images/sdl-logo.png"
-              alt="SDL Cargo"
-              width={100}
-              height={40}
-              className={styles.logoImage}
-              priority
-            />
-          </a>
+
 
           <div className={styles.navLinks}>
             <a href="#about" className={styles.navLink}>
